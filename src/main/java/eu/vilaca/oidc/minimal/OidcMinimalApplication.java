@@ -2,8 +2,10 @@ package eu.vilaca.oidc.minimal;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
-import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.oauth2.client.authentication.OAuth2AuthenticationToken;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.oauth2.client.OAuth2AuthorizedClient;
+import org.springframework.security.oauth2.client.annotation.RegisteredOAuth2AuthorizedClient;
+import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -18,15 +20,10 @@ public class OidcMinimalApplication {
 	}
 
 	@GetMapping("/")
-	public Map<String, String> getUserInfo() {
-		final var ctx = SecurityContextHolder.getContext();
-		final OAuth2AuthenticationToken auth = (OAuth2AuthenticationToken) ctx.getAuthentication();
-		final var provider = auth.getAuthorizedClientRegistrationId();
-		final var principal = auth.getPrincipal();
-		final var id = principal.getName();
-		return Map.of(
-				"provider", provider,
-				"id", id
-		);
+	public Map<String, Object> index(@RegisteredOAuth2AuthorizedClient OAuth2AuthorizedClient authorizedClient,
+									 @AuthenticationPrincipal OAuth2User oauth2User) {
+		return Map.of("userName", oauth2User.getName(),
+				"clientName", authorizedClient.getClientRegistration().getClientName(),
+				"userAttributes", oauth2User.getAttributes());
 	}
 }
